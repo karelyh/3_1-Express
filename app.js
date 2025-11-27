@@ -1,35 +1,42 @@
-const express = require('express')
-const cors = require('cors')
+const express = require('express');
+const cors = require('cors');
+const mysql = require('mysql2');
 
-const app = express()
-const port = process.env.PORT||3000
+const app = express();
+const port = process.env.PORT || 3000;
 
-app.use(express.json()) // Esta funcion parsear el body de la peticion y si trae JSON la agrega a prp body
+app.use(express.json());
+app.use(cors()); // Se puede poner globalmente
 
-app.get('/clientes', cors(), (req, res) => {
-  console.log(req.headers); // Muestra los headers de la peticion en la consola
-  res.send('Hello clientes!')
-})
+// Configuración de la conexión a la base de datos
+const db = mysql.createConnection({
+  host: 'localhost',      // o tu host remoto
+  user: 'root',           // tu usuario
+  password: '1234BD',// tu contraseña
+  database: 'practica1_bd' // nombre de tu base de datos
+});
 
-app.get('/', (req, res) => {
-  console.log(req.query); // Muestra los parámetros de consulta en la consola
-  res.send('Hello World!')
-})
+// Conectarse a la base de datos
+db.connect((err) => {
+  if (err) {
+    console.error('Error conectando a la base de datos:', err);
+    return;
+  }
+  console.log('Conectado a la base de datos MySQL');
+});
 
-app.get('/docentes/:control', (req, res) => {
-  console.log(req.params); // Muestra los parámetros de ruta en la consola
-  res.send('Hello docentes!')
-})
-
-app.get('/directivos', (req, res) => {
-  console.log(req.body); // Muestra los parámetros de consulta en la consola
-  res.send('Hello directivos!')
-})
-
-app.post('/', (req, res) => {
-  res.send('Hello World!')
-})
+// Ruta para obtener todos los clientes
+app.get('/clientes', (req, res) => {
+  const query = 'SELECT * FROM clientes'; // tabla clientes
+  db.query(query, (err, results) => {
+    if (err) {
+      console.error('Error ejecutando la consulta:', err);
+      return res.status(500).json({ error: 'Error en la base de datos' });
+    }
+    res.json(results);
+  });
+});
 
 app.listen(port, () => {
-  console.log(`Example app listening on port ${port}`)
-})
+  console.log(`Servidor corriendo en el puerto ${port}`);
+});
